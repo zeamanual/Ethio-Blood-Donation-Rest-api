@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { compare } from "bcrypt";
 import { UserService } from "../user/user.service";
 
 @Injectable()
@@ -10,7 +11,7 @@ export class AuthService{
        
         let userFound = await this.userService.getUser(username)
         if(userFound){
-            if(userFound.password===password){
+            if(await compare(password,userFound.password)){
                 return userFound
             }else{
                 throw new HttpException('Password Incorrect',HttpStatus.FORBIDDEN)

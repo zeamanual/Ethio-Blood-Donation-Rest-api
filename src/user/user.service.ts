@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import * as bcrypt from 'bcrypt'
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UserDoc } from "./schema/user.schma";
 
@@ -21,7 +22,9 @@ export class UserService {
     public async signUp(user:CreateUserDTO){
         let foundUser = await this.userModel.find({userName:user.userName})
         if(foundUser.length==0){
-            let newUser= new this.userModel({...user,role:'USER'})
+            let salt = await bcrypt.genSalt(10)
+            let hashedPassword = await bcrypt.hash(user.password,salt)
+            let newUser= new this.userModel({...user,password:hashedPassword ,role:'USER'})
             let createdUser = await newUser.save()
             return createdUser
         }
