@@ -1,7 +1,7 @@
 import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import { Address } from "../dto/address";
-import { BLOODTYPES } from "../user.constants";
+import { BLOODTYPES, GENDER, ROLES } from "../user.constants";
 
 
 export type UserDoc = Document & User
@@ -27,6 +27,9 @@ export class User {
     @Prop()
     password:string
 
+    @Prop({enum:GENDER})
+    gender:string
+
     @Prop({
         type:String,
         enum:BLOODTYPES
@@ -35,7 +38,7 @@ export class User {
 
     @Prop({
         type:[String],
-        enum:['USER','DONOR','REQUESTER','ADMIN']
+        enum:ROLES
     })
     role:string[]
 
