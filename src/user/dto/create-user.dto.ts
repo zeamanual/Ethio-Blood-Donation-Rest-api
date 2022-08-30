@@ -10,8 +10,8 @@ export class CreateUserDTO{
     userName:string
     @IsEmail()
     email:string
-    @IsNumber()
-    phoneNumber:number
+    @IsString()
+    phoneNumber:string
     @IsNumber()
     age:number
 
