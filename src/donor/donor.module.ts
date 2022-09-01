@@ -9,7 +9,7 @@ import { DonorSchema } from "./schema/donor.schema";
     imports:[
         MongooseModule.forFeature([{name:'Donor',schema:DonorSchema}]),
         forwardRef(()=>UserModule) 
-],
+    ],
     providers:[DonorService],
     controllers:[DonorController],
     exports:[DonorService]
