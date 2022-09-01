@@ -29,11 +29,14 @@ export class Request{
     @Prop({required:true,type:[String],enum:CITYNAMES})
     address:string[]
 
-    @Prop({required:true,type:mongoose.Schema.Types.ObjectId,ref:'Donor'})
-    FoundDonors:Donor[]
+    @Prop({required:true,type:[{type:mongoose.Schema.Types.ObjectId,ref:'Donor'}]})
+    foundDonors:Donor[]
 
     @Prop({required:true,type:String,enum:REQUESTSTATUS})
     status:string
+
+    @Prop()
+    message:string
 }
 
 export let RequestSchema = SchemaFactory.createForClass(Request)

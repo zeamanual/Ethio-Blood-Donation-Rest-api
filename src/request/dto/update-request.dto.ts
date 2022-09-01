@@ -15,4 +15,8 @@ export class UpdateRequestDTO{
     @IsOptional()
     @IsEnum(CITYNAMES,{each:true})
     address:string[]
+
+    @IsOptional()
+    @IsString()
+    message:string
 }

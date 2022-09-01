@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CreateRequestDTO } from "./dto/create-request.dto";
+import { UpdateRequestDTO } from "./dto/update-request.dto";
 import { REQUESTSTATUS } from "./request.constants";
 import { RequestDoc } from "./schema/request.schema";
 
@@ -16,8 +17,9 @@ export class RequestService{
             userRef:userId,
             foundBloodUnit:0,
             status:REQUESTSTATUS[0],
+            message:request?.message? request.message:'',
             remainingBloodUnit:request.requiredBloodUnit,
-            FoundDonors:[]
+            foundDonors:[]
         })
         let result =  await newRequest.save()
         return result
@@ -37,17 +39,15 @@ export class RequestService{
         return results
     }
 
-    public async updateRequest (requestId:string,request:CreateRequestDTO){
+    public async updateRequest (requestId:string,request:UpdateRequestDTO){
         let existingRequest = await this.requestModel.findOne({_id:requestId})
         let updatedRequest = await this.requestModel.findOneAndUpdate(
-            {
-                _id:requestId
-            },
+            {_id:requestId},
             {
             ...request,
-            status:REQUESTSTATUS[0],
             remainingBloodUnit:request.requiredBloodUnit-existingRequest.foundBloodUnit,
-        },{runValidators:true,new:true})
+            },
+            {runValidators:true,new:true})
         return updatedRequest
     }
     public async deleteRequest (requestId:string){

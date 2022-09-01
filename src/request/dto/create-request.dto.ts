@@ -1,4 +1,4 @@
-import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { BLOODTYPES, CITYNAMES } from "../../common/constants";
 
 export class CreateRequestDTO{
@@ -15,6 +15,10 @@ export class CreateRequestDTO{
     @IsNotEmpty({each:true})
     @IsEnum(CITYNAMES,{each:true})
     address:string[]
+
+    @IsOptional()
+    @IsString()
+    message:string
 
 
 }
