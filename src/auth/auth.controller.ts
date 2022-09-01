@@ -10,8 +10,8 @@ export class AuthController {
     
     // @UseGuards(AuthGuard("local"))
     @UseGuards(LocalAuthGuard)
-    @Post('/login')
+    @Post('/user/login')
     public login( @Req() req:Request, @Body("username")userName:string, @Body("password") password:string){
-        return {token: this.authService.generateToken({userName: req.user['userName'],role:req.user['role']})}
+        return {token: this.authService.generateToken({userName: req.user['userName'],_id:req.user['_id'],role:req.user['role']})}
     }
 }

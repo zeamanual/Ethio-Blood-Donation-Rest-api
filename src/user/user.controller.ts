@@ -1,17 +1,18 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Param, ParseIntPipe, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { Request } from "express";
 import { JwtAuthGuard } from "../auth/jwt.authguard";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UserService } from "./user.service";
 
-@Controller()
+@Controller('user')
 export class UserController {
     constructor(private userService:UserService){}
 
-    @Get("/test/:userName")
-    public async getUser(@Param("userName") userName:string){
-        let found = await this.userService.getUser(userName)
+    @UseGuards(JwtAuthGuard)
+    @Get()
+    public async getUser(@Req() req:Request){
+        let found = await this.userService.getUser(req.user["userName"])
         if(found){
             return {userName:found.userName,email:found.email,phoneNumber:found.phoneNumber,bloodType:found.bloodType,age:found.age,address:found.address}
         }
@@ -26,8 +27,10 @@ export class UserController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Get("/secured/s")
-    public getSecured(@Req() req:Request){
-        return req.user
+    @Put()
+    @HttpCode(200)
+    public async updateProfile(@Body() user:CreateUserDTO,@Req() req:Request){
+       return await this.userService.updateProfile(req.user['_id'],user)
+        return {msg:'Sucessful'}
     }
 }
