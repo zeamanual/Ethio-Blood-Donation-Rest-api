@@ -21,7 +21,7 @@ export class AuthService{
         }
     }
     public generateToken(payload:any){
-            return this.jwtService.sign(payload,{secret:process.env.TOKEN_SECRET,expiresIn:'30m'})
+            return this.jwtService.sign(payload,{secret:process.env.TOKEN_SECRET,expiresIn:'3000m'})
     }
 
 }
