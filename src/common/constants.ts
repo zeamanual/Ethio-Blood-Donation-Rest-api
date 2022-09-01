@@ -31,8 +31,3 @@ export const CITYNAMES = [
     'Jima',
     'Hawassa'
 ]
-export const REQUESTSTATUS = [
-    'Pending',
-    'Progress',
-    'Fulfilled'
-]

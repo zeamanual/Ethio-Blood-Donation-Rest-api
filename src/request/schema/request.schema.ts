@@ -1,9 +1,10 @@
-import { Prop, Schema } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import * as mongoose from 'mongoose'
 import { User } from "../../user/schema/user.schma";
-import { BLOODTYPES, CITYNAMES, REQUESTSTATUS } from "../../common/constants";
+import { BLOODTYPES, CITYNAMES } from "../../common/constants";
 import { Donor } from "../../donor/schema/donor.schema";
+import { REQUESTSTATUS } from "../request.constants";
 
 export type RequestDoc = Request & Document
 
@@ -33,6 +34,6 @@ export class Request{
 
     @Prop({required:true,type:String,enum:REQUESTSTATUS})
     status:string
-
-
 }
+
+export let RequestSchema = SchemaFactory.createForClass(Request)
