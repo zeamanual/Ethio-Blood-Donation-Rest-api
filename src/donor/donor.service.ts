@@ -2,14 +2,16 @@ import { forwardRef, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { UserService } from "../user/user.service";
+import { CreateDonorDTO } from "./dto/create-donor.dto";
+import { UpdateDonorDTO } from "./dto/update-donor.dto";
 import { DonorDoc } from "./schema/donor.schema";
 
 
 @Injectable()
 export class DonorService {
     constructor( @InjectModel("Donor") private donorModel:Model<DonorDoc>,@Inject(forwardRef(()=>UserService)) private userService:UserService){}
- 
-    async createDonor(userId:string){
+    
+    async createDonor(userId:string,donorDetail:CreateDonorDTO){
         let user = await this.userService.getById(userId)
         let existingDonor = await this.donorModel.findOne({userRef:user._id})
         if(existingDonor) throw new HttpException({msg:"Donor Already Created"},400)
@@ -17,7 +19,7 @@ export class DonorService {
         if(user){
             let newDonor =  new this.donorModel({
                 userRef:user['_id'],
-                address:user['address'],
+                address:donorDetail.address,
                 bloodType:user['bloodType'],
                 lastDonationDate:null,
                 isElligibleToDonate:true,
@@ -31,16 +33,19 @@ export class DonorService {
             return false
         }
     }
-    async disableDonor(userId){
-        return await this.donorModel.findOneAndUpdate({userRef:userId},{isActive:false},{runValidators:true,new:true})
-    }
-    async enableDonor(userId){
-        return await this.donorModel.findOneAndUpdate({userRef:userId},{isActive:true},{runValidators:true,new:true})
+
+    async getDonorByUserId(userid:string){
+        let donor= await this.donorModel.findOne({userRef:userid})
+        return donor
     }
 
+    // used by the user module for a cascading update when user profile is updated
     async updateDonorStates(userId){
         let user = await this.userService.getById(userId)
-        await this.donorModel.findOneAndUpdate({userRef:userId},{address:user['address'],bloodType:user['bloodType']})
+        await this.donorModel.findOneAndUpdate({userRef:userId},{bloodType:user['bloodType']})
+    }
+    async updateDonor(userId:string,donor:UpdateDonorDTO){
+        return await this.donorModel.findOneAndUpdate({userRef:userId},{address:donor.address,isActive:donor.active},{runValidators:true,new:true})
     }
 
 }

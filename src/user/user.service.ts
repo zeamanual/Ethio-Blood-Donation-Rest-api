@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt'
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UserDoc } from "./schema/user.schma";
 import { DonorService } from "../donor/donor.service";
+import { UpdateUserDTO } from "./dto/update-user.dto";
 
 
 @Injectable()
@@ -50,11 +51,12 @@ export class UserService {
         return await this.userModel.findOneAndUpdate({userName:userName},{role:[...existingUser.role,role]},{runValidators:true,new:true})
     }
 
-    public async updateProfile(userId,user:CreateUserDTO){
+    public async updateProfile(userId,user:UpdateUserDTO){
         let salt = await bcrypt.genSalt(10)
-         await this.userModel.findOneAndUpdate({_id:userId},{...user,password:await bcrypt.hash(user.password,salt)},{runValidators:true,new:true})
+        let existingUser = await this.userModel.findOne({_id:userId})
+        let updated = await this.userModel.findOneAndUpdate({_id:userId},{...user,password:user.password? await bcrypt.hash(user.password,salt):existingUser.password},{runValidators:true,new:true})
          await this.donorService.updateDonorStates(userId)
-         return this.userModel.findOne({_id:userId})
+         return updated
     }
 
 }

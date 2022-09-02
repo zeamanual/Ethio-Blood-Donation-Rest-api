@@ -1,6 +1,6 @@
 import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import * as mongoose from 'mongoose'
-import { Address } from "../../user/dto/address";
+import { CITYNAMES } from "../../common/constants";
 import { User } from "../../user/schema/user.schma";
 
 export type DonorDoc = Donor & mongoose.Document
@@ -10,8 +10,8 @@ export class Donor{
     @Prop({type:mongoose.Schema.Types.ObjectId,ref:'User'})
     userRef:User
 
-    @Prop(raw({cityName:String,longtitude:Number,latitude:Number}))
-    address:Address
+    @Prop({type:[String],enum:CITYNAMES})
+    address:string[]
 
     @Prop()
     bloodType:string

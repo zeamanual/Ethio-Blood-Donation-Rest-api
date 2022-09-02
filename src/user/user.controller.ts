@@ -3,6 +3,7 @@ import { AuthGuard } from "@nestjs/passport";
 import { Request } from "express";
 import { JwtAuthGuard } from "../auth/jwt.authguard";
 import { CreateUserDTO } from "./dto/create-user.dto";
+import { UpdateUserDTO } from "./dto/update-user.dto";
 import { UserService } from "./user.service";
 
 @Controller('user')
@@ -29,8 +30,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @Put()
     @HttpCode(200)
-    public async updateProfile(@Body() user:CreateUserDTO,@Req() req:Request){
+    public async updateProfile(@Body() user:UpdateUserDTO,@Req() req:Request){
        return await this.userService.updateProfile(req.user['_id'],user)
-        return {msg:'Sucessful'}
     }
 }
