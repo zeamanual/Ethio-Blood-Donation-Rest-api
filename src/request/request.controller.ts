@@ -22,26 +22,15 @@ export class RequestController{
         }
     }
     @Get('filter')
-    public async getRequestByAddressAndOrBloodType(@Query("address") address:string,@Query("bloodType") bloodType:string){
-        console.log('address',address,'bloodType',bloodType)
-        let matchingRequests = []
-        if(bloodType){
-            if(typeof address ==='object' ){
-                matchingRequests = await this.requestService.getRequestByAddressAndBloodType(address,bloodType)
-            }else if(typeof address ==='string'){
-                matchingRequests = await this.requestService.getRequestByAddressAndBloodType([address],bloodType)
+    public async getRequestByAddressAndOrBloodType(@Query() queryParams){
+        let foundMatches = await this.requestService.getRequestByQueryParametrs(queryParams)
+        if(foundMatches.length>0){
+            if( Object.keys(queryParams).includes('sizeOnly')){
+                return foundMatches.length
+            }else{
+                return foundMatches
             }
-
-        }else{
-            if(typeof address ==='object' ){
-                matchingRequests = await this.requestService.getRequestByAddress(address)
-                console.log('address is list')
-            }else if(typeof address ==='string'){
-                matchingRequests = await this.requestService.getRequestByAddress([address])
-            }
-        }
-        if(matchingRequests.length>0){
-            return matchingRequests 
+            
         }else{
             throw new HttpException("No request with specified filter found",404)
         }
