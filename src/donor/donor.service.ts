@@ -1,5 +1,6 @@
 import { forwardRef, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { Cron } from "@nestjs/schedule";
 import { Model } from "mongoose";
 import { UserService } from "../user/user.service";
 import { CreateDonorDTO } from "./dto/create-donor.dto";
@@ -11,7 +12,7 @@ import { DonorDoc } from "./schema/donor.schema";
 export class DonorService {
     constructor( @InjectModel("Donor") private donorModel:Model<DonorDoc>,@Inject(forwardRef(()=>UserService)) private userService:UserService){}
     
-    async createDonor(userId:string,donorDetail:CreateDonorDTO){
+    public async createDonor(userId:string,donorDetail:CreateDonorDTO){
         let user = await this.userService.getById(userId)
         let existingDonor = await this.donorModel.findOne({userRef:user._id})
         if(existingDonor) throw new HttpException({msg:"Donor Already Created"},400)
@@ -34,12 +35,12 @@ export class DonorService {
         }
     }
 
-    async getDonorByUserId(userid:string){
+    public async getDonorByUserId(userid:string){
         let donor= await this.donorModel.findOne({userRef:userid})
         return donor
     }
 
-    async addRequestRef(donorId:string,requestId:string){
+    public async addRequestRef(donorId:string,requestId:string){
         let existingDonorData = await this.donorModel.findOne({_id:donorId})
         if(existingDonorData){
             let updated = await this.donorModel.findOneAndUpdate({_id:donorId},{donatedFor:[...existingDonorData.donatedFor,requestId],isElligibleToDonate:false,lastDonationDate:new Date()})
@@ -48,19 +49,19 @@ export class DonorService {
         }
      }
     
-     async getDonorsByAddress(address:string[]){
+     public async getDonorsByAddress(address:string[]){
         return await this.donorModel.find({address:{$in:address}})
      }
      
-     async getDonorByBloodType(bloodType:string){
+     public async getDonorByBloodType(bloodType:string){
         return await this.donorModel.find({bloodType})
      }
 
-     async getDonorByBloodTypeAndAddress(address:string[],bloodType:string){
+     public async getDonorByBloodTypeAndAddress(address:string[],bloodType:string){
         return await this.donorModel.find({address:{$in:address},bloodType})
      }
 
-     async getDonorByQueryParametrs(parameters:any){
+     public async getDonorByQueryParametrs(parameters:any){
         let result = []
         if(parameters.bloodType && parameters.address){
             if( typeof parameters.address == 'object'){
@@ -83,13 +84,43 @@ export class DonorService {
         }
         return result
      }
+
     // used by the user module for a cascading update when user profile is updated
-    async updateDonorStates(userId:string){
+    public async updateDonorStates(userId:string){
         let user = await this.userService.getById(userId)
         await this.donorModel.findOneAndUpdate({userRef:userId},{bloodType:user['bloodType']})
     }
-    async updateDonor(userId:string,donor:UpdateDonorDTO){
+    public async updateDonor(userId:string,donor:UpdateDonorDTO){
         return await this.donorModel.findOneAndUpdate({userRef:userId},{address:donor.address,isActive:donor.active},{runValidators:true,new:true})
+    }
+
+    
+    @Cron("0 0 0 * * *")
+    public async updateAllDonorsEligibilityState(){
+        console.log("Donor Eligibility state update process initialised on: ",new Date())
+        let allDonors = await this.donorModel.find({}).populate("userRef")
+        let donorsCount = allDonors.length
+        let index = 0
+        while(index<donorsCount){
+            let currentDonor = allDonors[index]
+            if(currentDonor.lastDonationDate){
+                if(this.givenDaysPassedAfterGivenDate(currentDonor.lastDonationDate,75)){
+                    await this.donorModel.findOneAndUpdate({_id:currentDonor._id},{isElligibleToDonate:true})
+                }
+            }
+            index++
+        }
+    }
+
+    public givenDaysPassedAfterGivenDate(targetDate:Date,DaysPassed:number):boolean{
+        let currentDate = new Date()
+        let timeDiffrenceInDays = (currentDate.getTime()-targetDate.getTime())/(1000*60*60*24)
+        console.log(timeDiffrenceInDays)
+        if(timeDiffrenceInDays>DaysPassed){
+            return true
+        }else{
+            return false
+        }
     }
 
 }
