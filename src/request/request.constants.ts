@@ -3,3 +3,5 @@ export const REQUESTSTATUS = [
     'Progress',
     'Fulfilled'
 ]
+
+export const MAXDONATIONUNIT = 1

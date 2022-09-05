@@ -1,6 +1,6 @@
 export const BLOODTYPES =['AB+','AB-','A+','A-','B+','B-','O+','O-']
 
-export const CITIES = [
+export const CITIESGEOLOCATION = [
     {
         name:'Addis Ababa',
         latitude:45.67,
@@ -23,11 +23,6 @@ export const CITIES = [
     }
 ]
 
-export const CITYNAMES = [
-    'Addis Ababa',
-    'Dessie',
-    'Debre Brhan',
-    'Dire Dewa',
-    'Jima',
-    'Hawassa'
-]
+export const CITYNAMES = CITIESGEOLOCATION.map(cityDetail=>{
+    return cityDetail.name.toLowerCase()
+})
