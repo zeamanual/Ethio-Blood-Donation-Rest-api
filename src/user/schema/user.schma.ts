@@ -15,7 +15,7 @@ export class User {
     @Prop()
     email:string
 
-    @Prop({unique:true})
+    @Prop()
     phoneNumber:string
 
     @Prop()

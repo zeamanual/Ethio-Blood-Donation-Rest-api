@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpCode, HttpException, Post, Put, Req, Res, UseGuards } from "@nestjs/common";
-import { Request } from "express";
+import { Body, Controller, Get, HttpCode, HttpException, Post, Put, Query, Req, Res, UseGuards } from "@nestjs/common";
+import { query, Request } from "express";
 import { JwtAuthGuard } from "../auth/jwt.authguard";
 import { DonorService } from "./donor.service";
 import { CreateDonorDTO } from "./dto/create-donor.dto";
@@ -20,7 +20,15 @@ export class DonorController{
             throw new HttpException('User is not a donor',404)
         }
     }
-
+    @Get('filter')
+    public async getDonorsByFilter(@Query() queryParams){
+        let foundMatches = await this.donorService.getDonorByQueryParametrs(queryParams)
+        if(foundMatches.length>0){
+            return foundMatches
+        }else{
+            throw new HttpException("No donor with specified filter found",404)
+        }
+    }
     @Post()
     @HttpCode(201)
     public async createDonor(@Req() req:Request,@Body() donorDetail:CreateDonorDTO){
