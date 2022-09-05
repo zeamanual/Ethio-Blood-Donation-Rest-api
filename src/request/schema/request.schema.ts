@@ -34,7 +34,8 @@ export class Request{
 
     @Prop({required:true,type:String,enum:REQUESTSTATUS})
     status:string
-
+    @Prop({type:Date, required:true})
+    date:Date
     @Prop()
     message:string
 }

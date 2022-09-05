@@ -18,6 +18,7 @@ export class RequestService{
             userRef:userId,
             foundBloodUnit:0,
             status:REQUESTSTATUS[0],
+            date:new Date(),
             message:request?.message? request.message:'',
             remainingBloodUnit:request.requiredBloodUnit,
             foundDonors:[]
