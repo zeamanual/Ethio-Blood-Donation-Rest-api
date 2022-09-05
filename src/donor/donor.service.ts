@@ -47,8 +47,44 @@ export class DonorService {
             throw new HttpException("User not a donor",404)
         }
      }
+    
+     async getDonorsByAddress(address:string[]){
+        return await this.donorModel.find({address:{$in:address}})
+     }
+     
+     async getDonorByBloodType(bloodType:string){
+        return await this.donorModel.find({bloodType})
+     }
+
+     async getDonorByBloodTypeAndAddress(address:string[],bloodType:string){
+        return await this.donorModel.find({address:{$in:address},bloodType})
+     }
+
+     async getDonorByQueryParametrs(parameters:any){
+        let result = []
+        if(parameters.bloodType && parameters.address){
+            if( typeof parameters.address == 'object'){
+                result = await this.getDonorByBloodTypeAndAddress(parameters.address,parameters.bloodType)
+            }else if(typeof parameters.address == 'string'){
+                result = await this.getDonorByBloodTypeAndAddress([parameters.address],parameters.bloodType)
+            }else{
+                result = await this.getDonorByBloodType(parameters.bloodType)
+            }
+        }else if(parameters.bloodType){
+            result = await this.getDonorByBloodType(parameters.bloodType)
+        }else if(parameters.address){
+            if( typeof parameters.address == 'object'){
+                result = await this.getDonorsByAddress(parameters.address)
+            }else if(typeof parameters.address == 'string'){
+                result = await this.getDonorsByAddress([parameters.address])  
+        }
+        }else{
+            return await this.donorModel.find({})
+        }
+        return result
+     }
     // used by the user module for a cascading update when user profile is updated
-    async updateDonorStates(userId){
+    async updateDonorStates(userId:string){
         let user = await this.userService.getById(userId)
         await this.donorModel.findOneAndUpdate({userRef:userId},{bloodType:user['bloodType']})
     }
