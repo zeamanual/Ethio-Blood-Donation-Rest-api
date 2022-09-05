@@ -39,6 +39,14 @@ export class DonorService {
         return donor
     }
 
+    async addRequestRef(donorId:string,requestId:string){
+        let existingDonorData = await this.donorModel.findOne({_id:donorId})
+        if(existingDonorData){
+            let updated = await this.donorModel.findOneAndUpdate({_id:donorId},{donatedFor:[...existingDonorData.donatedFor,requestId],isElligibleToDonate:false,lastDonationDate:new Date()})
+        }else{
+            throw new HttpException("User not a donor",404)
+        }
+     }
     // used by the user module for a cascading update when user profile is updated
     async updateDonorStates(userId){
         let user = await this.userService.getById(userId)

@@ -1,5 +1,6 @@
 import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import * as mongoose from 'mongoose'
+import { Request } from "../../request/schema/request.schema";
 import { CITYNAMES } from "../../common/constants";
 import { User } from "../../user/schema/user.schma";
 
@@ -25,8 +26,8 @@ export class Donor{
     @Prop()
     isActive:boolean
 
-    @Prop({type:[{type:mongoose.Schema.Types.ObjectId, ref:'User'}]})
-    donatedFor:User
+    @Prop({type:[{type:mongoose.Schema.Types.ObjectId, ref:'Request'}]})
+    donatedFor:Request[]
 }
 
 export const DonorSchema = SchemaFactory.createForClass(Donor)
