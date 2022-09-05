@@ -51,6 +51,30 @@ export class RequestService{
         return await this.requestModel.find({address:{$in:[...address]}})
     }
 
+    async getRequestByQueryParametrs(parameters:any){
+        let result = []
+        if(parameters.bloodType && parameters.address){
+            if( typeof parameters.address == 'object'){
+                result = await this.getRequestByAddressAndBloodType(parameters.address,parameters.bloodType)
+            }else if(typeof parameters.address == 'string'){
+                result = await this.getRequestByAddressAndBloodType([parameters.address],parameters.bloodType)
+            }else{
+                result = await this.getRequestByBloodType(parameters.bloodType)
+            }
+        }else if(parameters.bloodType){
+            result = await this.getRequestByBloodType(parameters.bloodType)
+        }else if(parameters.address){
+            if( typeof parameters.address == 'object'){
+                result = await this.getRequestByAddress(parameters.address)
+            }else if(typeof parameters.address == 'string'){
+                result = await this.getRequestByAddress([parameters.address])  
+        }
+        }else{
+            return await this.requestModel.find({})
+        }
+        return result
+     }
+
     public async addDonorForRequest(requestId:string,donorId:string){
         let existingRequest = await this.requestModel.findOne({_id:requestId})
         let updated = ''

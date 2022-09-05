@@ -24,7 +24,11 @@ export class DonorController{
     public async getDonorsByFilter(@Query() queryParams){
         let foundMatches = await this.donorService.getDonorByQueryParametrs(queryParams)
         if(foundMatches.length>0){
-            return foundMatches
+            if( Object.keys(queryParams).includes('sizeOnly')){
+                return foundMatches.length
+            }else{
+                return foundMatches
+            }
         }else{
             throw new HttpException("No donor with specified filter found",404)
         }
