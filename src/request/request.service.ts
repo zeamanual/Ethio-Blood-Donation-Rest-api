@@ -41,37 +41,52 @@ export class RequestService{
         return results
     }
 
-    public async getRequestByAddressAndBloodType(addresses:string[],bloodType:string){
-        return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType})
+    public async getRequestByAddressBloodTypeAndStatus(addresses:string[],bloodType:string,status:string[]){
+        return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}})
     }
-    public async getRequestByBloodType(bloodType:string){
-       return await this.requestModel.find({bloodType:bloodType})
+    public async getRequestByBloodTypeAndStatus(bloodType:string,status:string[]){
+       return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}})
     }
-    public async getRequestByAddress(address:string[]){
-        return await this.requestModel.find({address:{$in:[...address]}})
+    public async getRequestByAddressAndStatus(address:string[],status:string[]){
+        return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}})
     }
 
     async getRequestByQueryParametrs(parameters:any){
         let result = []
+        let status = [...REQUESTSTATUS]
+
+        // handling status of request
+        if(parameters.status){
+            if(typeof parameters.status === 'string'){
+                if(parameters.status !=='all'){
+                    status=[parameters.status]
+                }
+            }else if(typeof parameters.status === 'object'){
+                status= [...parameters.status]
+            }
+        }
+
+        // handling address and blood type of request
         if(parameters.bloodType && parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getRequestByAddressAndBloodType(parameters.address,parameters.bloodType)
+                result = await this.getRequestByAddressBloodTypeAndStatus(parameters.address,parameters.bloodType,status)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getRequestByAddressAndBloodType([parameters.address],parameters.bloodType)
+                result = await this.getRequestByAddressBloodTypeAndStatus([parameters.address],parameters.bloodType,status)
             }else{
-                result = await this.getRequestByBloodType(parameters.bloodType)
+                result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status)
             }
         }else if(parameters.bloodType){
-            result = await this.getRequestByBloodType(parameters.bloodType)
+            result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status)
         }else if(parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getRequestByAddress(parameters.address)
+                result = await this.getRequestByAddressAndStatus(parameters.address,status)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getRequestByAddress([parameters.address])  
+                result = await this.getRequestByAddressAndStatus([parameters.address],status)  
         }
         }else{
-            return await this.requestModel.find({})
+            return await this.requestModel.find({status:status})
         }
+
         return result
      }
 

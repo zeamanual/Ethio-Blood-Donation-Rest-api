@@ -1,7 +1,7 @@
 export const REQUESTSTATUS = [
-    'Pending',
-    'Progress',
-    'Fulfilled'
+    'pending',
+    'progress',
+    'fulfilled'
 ]
 
 export const MAXDONATIONUNIT = 1
