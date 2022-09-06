@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { PAGESIZE } from "../common/constants";
 import { DonorService } from "../donor/donor.service";
 import { CreateRequestDTO } from "./dto/create-request.dto";
 import { UpdateRequestDTO } from "./dto/update-request.dto";
@@ -41,20 +42,23 @@ export class RequestService{
         return results
     }
 
-    public async getRequestByAddressBloodTypeAndStatus(addresses:string[],bloodType:string,status:string[]){
-        return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}})
+    public async getRequestByAddressBloodTypeAndStatus(addresses:string[],bloodType:string,status:string[],pageNumber:number){
+        return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
-    public async getRequestByBloodTypeAndStatus(bloodType:string,status:string[]){
-       return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}})
+    public async getRequestByBloodTypeAndStatus(bloodType:string,status:string[],pageNumber:number){
+       return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
-    public async getRequestByAddressAndStatus(address:string[],status:string[]){
-        return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}})
+    public async getRequestByAddressAndStatus(address:string[],status:string[],pageNumber:number){
+        return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
-
+    public async getRequestByStatus(status:string[],pageNumber:number){
+        return await this.requestModel.find({status:{$in:status}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+    }
     async getRequestByQueryParametrs(parameters:any){
         let result = []
+        let pageNumber = 1
         let status = [...REQUESTSTATUS]
-
+    
         // handling status of request
         if(parameters.status){
             if(typeof parameters.status === 'string'){
@@ -66,25 +70,33 @@ export class RequestService{
             }
         }
 
+        // handling pagination 
+        if(parameters.pageNumber){
+            let temp = parseInt(parameters.pageNumber)
+            if(!isNaN(temp)){
+                pageNumber=temp
+            }
+        }
+       
         // handling address and blood type of request
         if(parameters.bloodType && parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getRequestByAddressBloodTypeAndStatus(parameters.address,parameters.bloodType,status)
+                result = await this.getRequestByAddressBloodTypeAndStatus(parameters.address,parameters.bloodType,status,pageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getRequestByAddressBloodTypeAndStatus([parameters.address],parameters.bloodType,status)
+                result = await this.getRequestByAddressBloodTypeAndStatus([parameters.address],parameters.bloodType,status,pageNumber)
             }else{
-                result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status)
+                result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status,pageNumber)
             }
         }else if(parameters.bloodType){
-            result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status)
+            result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status,pageNumber)
         }else if(parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getRequestByAddressAndStatus(parameters.address,status)
+                result = await this.getRequestByAddressAndStatus(parameters.address,status,pageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getRequestByAddressAndStatus([parameters.address],status)  
+                result = await this.getRequestByAddressAndStatus([parameters.address],status,pageNumber)  
         }
         }else{
-            return await this.requestModel.find({status:status})
+            result = await this.getRequestByStatus(status,pageNumber)
         }
 
         return result

@@ -2,6 +2,7 @@ import { forwardRef, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Cron } from "@nestjs/schedule";
 import { Model } from "mongoose";
+import { PAGESIZE } from "../common/constants";
 import { UserService } from "../user/user.service";
 import { CreateDonorDTO } from "./dto/create-donor.dto";
 import { UpdateDonorDTO } from "./dto/update-donor.dto";
@@ -49,21 +50,26 @@ export class DonorService {
         }
      }
     
-     public async getDonorsByAddressAndStatus(address:string[],activeStatus){
-        return await this.donorModel.find({address:{$in:address},isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}})
+     public async getDonorsByAddressAndStatus(address:string[],activeStatus:boolean,pageNumber:number){
+        return await this.donorModel.find({address:{$in:address},isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
      }
      
-     public async getDonorByBloodTypeAndStatus(bloodType:string,activeStatus){
-        return await this.donorModel.find({bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}})
+     public async getDonorByBloodTypeAndStatus(bloodType:string,activeStatus:boolean,pageNumber:number){
+        return await this.donorModel.find({bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
      }
 
-     public async getDonorByBloodTypeAddressAndStatus(address:string[],bloodType:string,activeStatus){
-        return await this.donorModel.find({address:{$in:address},bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}})
+     public async getDonorByBloodTypeAddressAndStatus(address:string[],bloodType:string,activeStatus:boolean,pageNumber:number){
+        return await this.donorModel.find({address:{$in:address},bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+     }
+
+     public async getDonorsByStatus(activeStatus:boolean,pageNumber:number){
+        return await this.donorModel.find({isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
      }
 
      public async getDonorByQueryParametrs(parameters:any){
         let result = []
         let activeStatus = false
+        let pageNumber = 1
 
         // handling status of donor
         if(parameters.status){
@@ -74,25 +80,33 @@ export class DonorService {
                 }
         }
 
+        // handling pagination 
+        if(parameters.pageNumber){
+            let temp = parseInt(parameters.pageNumber)
+            if(!isNaN(temp)){
+                pageNumber=temp
+            }
+        }
+       
         // handling address and blood type of donor
         if(parameters.bloodType && parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getDonorByBloodTypeAddressAndStatus(parameters.address,parameters.bloodType,activeStatus)
+                result = await this.getDonorByBloodTypeAddressAndStatus(parameters.address,parameters.bloodType,activeStatus,pageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getDonorByBloodTypeAddressAndStatus([parameters.address],parameters.bloodType,activeStatus)
+                result = await this.getDonorByBloodTypeAddressAndStatus([parameters.address],parameters.bloodType,activeStatus,pageNumber)
             }else{
-                result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus)
+                result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus,pageNumber)
             }
         }else if(parameters.bloodType){
-            result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus)
+            result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus,pageNumber)
         }else if(parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getDonorsByAddressAndStatus(parameters.address,activeStatus)
+                result = await this.getDonorsByAddressAndStatus(parameters.address,activeStatus,pageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getDonorsByAddressAndStatus([parameters.address],activeStatus)  
+                result = await this.getDonorsByAddressAndStatus([parameters.address],activeStatus,pageNumber)  
         }
         }else{
-            return await this.donorModel.find({isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}})
+            result = await this.getDonorsByStatus(activeStatus,pageNumber)
         }
         return result
      }
