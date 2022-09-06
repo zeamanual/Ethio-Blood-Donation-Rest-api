@@ -41,6 +41,11 @@ export class DonorService {
         return donor
     }
 
+    public async getDonorById(donorId:string){
+        let donor= await this.donorModel.findOne({_id:donorId})
+        return donor
+    }
+
     public async addRequestRef(donorId:string,requestId:string){
         let existingDonorData = await this.donorModel.findOne({_id:donorId})
         if(existingDonorData){
