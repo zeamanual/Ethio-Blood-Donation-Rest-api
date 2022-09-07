@@ -13,7 +13,7 @@ import { EmailService } from "../common/email-notifier/email-notifier.service";
 @Injectable()
 export class RequestService{
 
-    constructor(@InjectModel('Request') private requestModel:Model<RequestDoc>,private donorService:DonorService,private mailerService:MailerService,private emailService:EmailService ){}
+    constructor(@InjectModel('Request') private requestModel:Model<RequestDoc>,private donorService:DonorService,private emailService:EmailService ){}
 
     public async createRequest (userId:string,request:CreateRequestDTO){
         let newRequest = new this.requestModel({
@@ -122,18 +122,26 @@ export class RequestService{
 
     public async addDonorForRequest(requestId:string,donorId:string){
         let existingRequest = await this.requestModel.findOne({_id:requestId})
-        let updated = ''
+        let updated = null
         if(existingRequest){
             if(existingRequest.remainingBloodUnit===0){
                 return null
             }else{
                if(existingRequest.remainingBloodUnit===1){
-                    updated=  await this.requestModel.findOneAndUpdate({_id:requestId},{remainingBloodUnit:existingRequest.remainingBloodUnit-MAXDONATIONUNIT,foundBloodUnit:existingRequest.foundBloodUnit+MAXDONATIONUNIT,status:REQUESTSTATUS[2],foundDonors:[...existingRequest.foundDonors,donorId]},{runValidators:true,new:true})
+                    updated=  await this.requestModel.findOneAndUpdate({_id:requestId},{remainingBloodUnit:existingRequest.remainingBloodUnit-MAXDONATIONUNIT,foundBloodUnit:existingRequest.foundBloodUnit+MAXDONATIONUNIT,status:REQUESTSTATUS[2],foundDonors:[...existingRequest.foundDonors,donorId]},{runValidators:true,new:true}).populate('userRef')
                 }
                 else{
-                    updated = await this.requestModel.findOneAndUpdate({_id:requestId},{remainingBloodUnit:existingRequest.remainingBloodUnit-MAXDONATIONUNIT,foundBloodUnit:existingRequest.foundBloodUnit+MAXDONATIONUNIT,status:REQUESTSTATUS[1],foundDonors:[...existingRequest.foundDonors,donorId]},{runValidators:true,new:true})
+                    updated = await this.requestModel.findOneAndUpdate({_id:requestId},{remainingBloodUnit:existingRequest.remainingBloodUnit-MAXDONATIONUNIT,foundBloodUnit:existingRequest.foundBloodUnit+MAXDONATIONUNIT,status:REQUESTSTATUS[1],foundDonors:[...existingRequest.foundDonors,donorId]},{runValidators:true,new:true}).populate('userRef')
                 } 
+                let notificationRecipientEmail= [updated.userRef.email]
                 await this.donorService.addRequestRef(donorId,requestId)
+                // console.log(notificationRecipientEmail)
+                if(notificationRecipientEmail.length>0){
+                    this.emailService.sendEmail(`Hellow dear ${updated.userRef.userName}, we hope you are doing well. A new donor has been found for your request. Check the details on the portal `
+                    ,'Donor Found',
+                    `<div style = ' display:flex;flex-direction:column;align-items:center; font-family:sans-serif;padding:5em 2em;border-radius:1em;box-shadow: 2px 2px 10px black'> <img style = 'width:50vw;object-fit:cover' src = 'https://www.bagmo.in/wp-content/uploads/2022/03/volunteers-woman-man-donating-blood-blood-donor-charity_262189-61.webp' /> <p style = 'text-align:justify'> Hellow dear ${updated.userRef.userName}, we hope you are doing well. A new donor has been found for your request. Check the details on the <a href = 'https://www.google.com' style='text-decoration:none;background:blue;color:white;border-radius:1em;padding:0.1em 1em;margin:0.1em 0.2em' >Portal </a></p> </div>`,
+                    notificationRecipientEmail)
+                } 
                 return updated
 
             } 

@@ -147,7 +147,6 @@ export class DonorService {
             }
             index++
         }
-        console.log(notificationRecipientEmails)
         if(notificationRecipientEmails.length>0){
             this.emailService.sendEmail(`Hi dear Donor, we hope you are doing well. starting from today you can start donating you'er blood as 3 months have passed since your last donation`
             ,'Recovery Time Completed. You can donate now',
@@ -159,7 +158,7 @@ export class DonorService {
     public givenDaysPassedAfterGivenDate(targetDate:Date,DaysPassed:number):boolean{
         let currentDate = new Date()
         let timeDiffrenceInDays = (currentDate.getTime()-targetDate.getTime())/(1000*60*60*24)
-        console.log(timeDiffrenceInDays)
+        // console.log(timeDiffrenceInDays)
         if(timeDiffrenceInDays>DaysPassed){
             return true
         }else{
