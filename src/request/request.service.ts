@@ -37,7 +37,10 @@ export class RequestService{
             }
             // console.log(recipientEmails)
             if(recipientEmails.length>0){
-                this.emailService.sendEmail(`${result.userRef.userName} needs your help, check the donation portal at https://www.google.com to donate your blood and save life `,"Some one you can save is on the way",`<div style = 'font-family:sans-serif;padding:5em 1em;border-radius:1em;box-shadow: 2px 2px 10px black'> <h4 style='text-transform:capitalize;display:inline'>${result.userRef.userName}</h4> needs your help, check the donation portal <a href = 'https://www.google.com' style='text-decoration:none;background:blue;color:white;border-radius:1em;padding:0.2em 1em;margin:0.1em 0.2em' >here </a> to donate your blood and save life </div> `,recipientEmails)
+                this.emailService.sendEmail(`${result.userRef.userName} needs your help, check the donation portal at https://www.google.com to donate your blood and save life `,"Some one you can save is on the way",
+                // `<div style = 'font-family:sans-serif;padding:5em 1em;border-radius:1em;box-shadow: 2px 2px 10px black'> <h4 style='text-transform:capitalize;display:inline'>${result.userRef.userName}</h4> needs your help, check the donation portal <a href = 'https://www.google.com' style='text-decoration:none;background:blue;color:white;border-radius:1em;padding:0.2em 1em;margin:0.1em 0.2em' >here </a> to donate your blood and save life </div>`,
+                `<div style = ' display:flex;flex-direction:column;align-items:center; font-family:sans-serif;padding:5em 2em;border-radius:1em;box-shadow: 2px 2px 10px black'> <img style = 'width:50vw;object-fit:cover' src = 'https://www.bagmo.in/wp-content/uploads/2022/03/volunteers-woman-man-donating-blood-blood-donor-charity_262189-61.webp' />  <div style = 'margin:1em 0;line-height:2em'><h4 style='text-transform:capitalize;display:inline'> ${result.userRef.userName}</h4> needs your help, check the donation portal <a href = 'https://www.google.com' style='text-decoration:none;background:blue;color:white;border-radius:1em;padding:0.1em 1em;margin:0.1em 0.2em' >here </a> to donate your blood and save life</div> </div>`,
+                recipientEmails)
             }
         }
         // console.log(matchingDonors)

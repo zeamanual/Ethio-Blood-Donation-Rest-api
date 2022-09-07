@@ -128,6 +128,7 @@ export class DonorService {
 
     
     @Cron("0 0 0 * * *")
+    // @Cron("*/4 * * * * *")
     public async updateAllDonorsEligibilityState(){
         console.log("Donor Eligibility state update process initialised on: ",new Date())
         let allDonors = await this.donorModel.find({}).populate("userRef")
@@ -146,10 +147,11 @@ export class DonorService {
             }
             index++
         }
+        console.log(notificationRecipientEmails)
         if(notificationRecipientEmails.length>0){
             this.emailService.sendEmail(`Hi dear Donor, we hope you are doing well. starting from today you can start donating you'er blood as 3 months have passed since your last donation`
             ,'Recovery Time Completed. You can donate now',
-            `<div style = 'font-family:sans-serif;padding:5em 1em;border-radius:1em;box-shadow: 2px 2px 10px black'>Hi dear Donor, we hope you are doing well. starting from today you can start donating you'er blood as 3 months have passed since your last donation </div>`,
+            `<div style = ' display:flex;flex-direction:column;align-items:center; font-family:sans-serif;padding:5em 2em;border-radius:1em;box-shadow: 2px 2px 10px black'> <img style = 'width:50vw;object-fit:cover' src = 'https://www.bagmo.in/wp-content/uploads/2022/03/volunteers-woman-man-donating-blood-blood-donor-charity_262189-61.webp' /> <p style = 'text-align:justify'> Hi dear Donor, we hope you are doing well. starting from today you can start donating you'er blood as 3 months have passed since your last donation</p> </div>`,
             notificationRecipientEmails)
         }
     }
