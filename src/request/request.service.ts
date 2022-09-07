@@ -7,11 +7,13 @@ import { CreateRequestDTO } from "./dto/create-request.dto";
 import { UpdateRequestDTO } from "./dto/update-request.dto";
 import { MAXDONATIONUNIT, REQUESTSTATUS } from "./request.constants";
 import { RequestDoc } from "./schema/request.schema";
+import { MailerService } from '@nestjs-modules/mailer';
+import { EmailService } from "../common/email-notifier/email-notifier.service";
 
 @Injectable()
 export class RequestService{
 
-    constructor(@InjectModel('Request') private requestModel:Model<RequestDoc>,private donorService:DonorService ){}
+    constructor(@InjectModel('Request') private requestModel:Model<RequestDoc>,private donorService:DonorService,private mailerService:MailerService,private emailService:EmailService ){}
 
     public async createRequest (userId:string,request:CreateRequestDTO){
         let newRequest = new this.requestModel({
@@ -24,7 +26,21 @@ export class RequestService{
             remainingBloodUnit:request.requiredBloodUnit,
             foundDonors:[]
         })
-        let result =  await newRequest.save()
+        let result =  await (await newRequest.save()).populate('userRef')
+        let matchingDonors = await this.donorService.getDonorByQueryParametrs({status:'active',bloodType:request.bloodType,address:request.address})
+        if(matchingDonors.length>0){
+            let recipientEmails = []
+            for(let donor of matchingDonors){
+                if(donor.userRef.email){
+                    recipientEmails.push(donor.userRef.email)
+                }
+            }
+            // console.log(recipientEmails)
+            if(recipientEmails.length>0){
+                this.emailService.sendEmail(`${result.userRef.userName} needs your help, check the donation portal at https://www.google.com to donate your blood and save life `,"Some one you can save is on the way",`<div style = 'font-family:sans-serif;padding:5em 1em;border-radius:1em;box-shadow: 2px 2px 10px black'> <h4 style='text-transform:capitalize;display:inline'>${result.userRef.userName}</h4> needs your help, check the donation portal <a href = 'https://www.google.com' style='text-decoration:none;background:blue;color:white;border-radius:1em;padding:0.2em 1em;margin:0.1em 0.2em' >here </a> to donate your blood and save life </div> `,recipientEmails)
+            }
+        }
+        // console.log(matchingDonors)
         return result
     }
 
@@ -58,8 +74,7 @@ export class RequestService{
         let result = []
         let pageNumber = 1
         let status = [...REQUESTSTATUS]
-    
-        // handling status of request
+        // this.emailService.sendEmail('this is the text fild on the message','to kill you','<h2>hey due</h2><p>paragraph dude!!</p>',['abe@gmail.com','tewo@gmail.com'])
         if(parameters.status){
             if(typeof parameters.status === 'string'){
                 if(parameters.status !=='all'){

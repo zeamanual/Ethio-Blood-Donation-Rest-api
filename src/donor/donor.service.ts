@@ -2,6 +2,7 @@ import { forwardRef, HttpException, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Cron } from "@nestjs/schedule";
 import { Model } from "mongoose";
+import { EmailService } from "../common/email-notifier/email-notifier.service";
 import { PAGESIZE } from "../common/constants";
 import { UserService } from "../user/user.service";
 import { CreateDonorDTO } from "./dto/create-donor.dto";
@@ -11,7 +12,7 @@ import { DonorDoc } from "./schema/donor.schema";
 
 @Injectable()
 export class DonorService {
-    constructor( @InjectModel("Donor") private donorModel:Model<DonorDoc>,@Inject(forwardRef(()=>UserService)) private userService:UserService){}
+    constructor( @InjectModel("Donor") private donorModel:Model<DonorDoc>,@Inject(forwardRef(()=>UserService)) private userService:UserService,private emailService:EmailService){}
     
     public async createDonor(userId:string,donorDetail:CreateDonorDTO){
         let user = await this.userService.getById(userId)
@@ -56,19 +57,19 @@ export class DonorService {
      }
     
      public async getDonorsByAddressAndStatus(address:string[],activeStatus:boolean,pageNumber:number){
-        return await this.donorModel.find({address:{$in:address},isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.donorModel.find({address:{$in:address},isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
      
      public async getDonorByBloodTypeAndStatus(bloodType:string,activeStatus:boolean,pageNumber:number){
-        return await this.donorModel.find({bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.donorModel.find({bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
 
      public async getDonorByBloodTypeAddressAndStatus(address:string[],bloodType:string,activeStatus:boolean,pageNumber:number){
-        return await this.donorModel.find({address:{$in:address},bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.donorModel.find({address:{$in:address},bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
 
      public async getDonorsByStatus(activeStatus:boolean,pageNumber:number){
-        return await this.donorModel.find({isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.donorModel.find({isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
 
      public async getDonorByQueryParametrs(parameters:any){
@@ -132,14 +133,24 @@ export class DonorService {
         let allDonors = await this.donorModel.find({}).populate("userRef")
         let donorsCount = allDonors.length
         let index = 0
+        let notificationRecipientEmails=[]
         while(index<donorsCount){
             let currentDonor = allDonors[index]
             if(currentDonor.lastDonationDate){
-                if(this.givenDaysPassedAfterGivenDate(currentDonor.lastDonationDate,75)){
-                    await this.donorModel.findOneAndUpdate({_id:currentDonor._id},{isElligibleToDonate:true})
+                if(this.givenDaysPassedAfterGivenDate(currentDonor.lastDonationDate,1)){
+                   let updated =  await this.donorModel.findOneAndUpdate({_id:currentDonor._id},{isElligibleToDonate:true},{runValidators:true,new:true}).populate('userRef')
+                   if(updated.userRef.email){
+                    notificationRecipientEmails.push(updated.userRef.email)
+                   }
                 }
             }
             index++
+        }
+        if(notificationRecipientEmails.length>0){
+            this.emailService.sendEmail(`Hi dear Donor, we hope you are doing well. starting from today you can start donating you'er blood as 3 months have passed since your last donation`
+            ,'Recovery Time Completed. You can donate now',
+            `<div style = 'font-family:sans-serif;padding:5em 1em;border-radius:1em;box-shadow: 2px 2px 10px black'>Hi dear Donor, we hope you are doing well. starting from today you can start donating you'er blood as 3 months have passed since your last donation </div>`,
+            notificationRecipientEmails)
         }
     }
 
