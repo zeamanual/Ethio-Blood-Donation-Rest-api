@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { PAGESIZE } from "../common/constants";
@@ -85,6 +85,18 @@ export class RequestService{
         }
         return await this.requestModel.find({status:{$in:status}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
+
+    public async getDonorMatchingRequests(userId: string,pageNumber:number) {
+        let donor = await this.donorService.getDonorByUserId(userId)
+        let matchingRequests= []
+        // console.log(donor)
+        if(donor){
+            matchingRequests = await this.getRequestByQueryParametrs({bloodType:donor.bloodType,address:donor.address,status:[REQUESTSTATUS[0],REQUESTSTATUS[1]],pageNumber})
+            return matchingRequests
+        }
+        throw new HttpException("Donor not found.",404)
+    }
+
     async getRequestByQueryParametrs(parameters:any){
         let result = []
         let pageNumber = 1

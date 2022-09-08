@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, ParseIntPipe, Post, Put, Query, Req, UseGuards } from "@nestjs/common";
 import { Request } from "express";
 import { DonorService } from "../donor/donor.service";
 import { JwtAuthGuard } from "../auth/jwt.authguard";
@@ -22,7 +22,7 @@ export class RequestController{
         }
     }
     @Get('filter')
-    public async getRequestByAddressAndOrBloodType(@Query() queryParams){
+    public async getRequestByAddressBloodTypeAndStatus(@Query() queryParams){
         let foundMatches = await this.requestService.getRequestByQueryParametrs(queryParams)
         if(foundMatches.length>0){
             if( Object.keys(queryParams).includes('sizeOnly')){
@@ -34,6 +34,14 @@ export class RequestController{
         }else{
             throw new HttpException("No request with specified filter found",404)
         }
+    }
+    @Get('match/:pageNumber')
+    public async getDonorMatchingRequests(@Param('pageNumber',ParseIntPipe) pageNumber:number,@Req() request:Request){
+        let matchingRequests = await this.requestService.getDonorMatchingRequests(request.user['_id'],pageNumber)
+        if(matchingRequests.length>0){
+            return matchingRequests
+        }
+        throw new HttpException("No matching requests found",404)
     }
     @Get('/:requestId')
     public async getRequestById(@Param("requestId") requestId:string){
