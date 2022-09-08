@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class EmailService {
-    constructor(private mailService:MailerService){}
+    constructor(private mailerService:MailerService){}
 
     public async sendEmail(message:string,subject:string,html:string='',recipients:string[]){
         let receivers = ''
@@ -12,7 +12,7 @@ export class EmailService {
         }
 
         try {
-            let response = await this.mailService.sendMail({
+            let response = await this.mailerService.sendMail({
                 to:receivers,
                 from:'"Ethio Digital Blood Donation" <Ethio-Digital-Blood-Donation@zeamanual>',
                 text:message,

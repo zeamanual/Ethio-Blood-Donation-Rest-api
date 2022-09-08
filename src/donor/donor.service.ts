@@ -56,19 +56,31 @@ export class DonorService {
         }
      }
     
-     public async getDonorsByAddressAndStatus(address:string[],activeStatus:boolean,pageNumber:number){
+     public async getDonorsByAddressAndStatus(address:string[],activeStatus:boolean,pageNumber:number,ignorePageNumber:boolean = false){
+        if(ignorePageNumber){
+            return await this.donorModel.find({address:{$in:address},isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).populate("userRef")
+        }
         return await this.donorModel.find({address:{$in:address},isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
      
-     public async getDonorByBloodTypeAndStatus(bloodType:string,activeStatus:boolean,pageNumber:number){
+     public async getDonorByBloodTypeAndStatus(bloodType:string,activeStatus:boolean,pageNumber:number,ignorePageNumber:boolean = false){
+        if(ignorePageNumber){
+            return await this.donorModel.find({bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).populate("userRef")
+        }
         return await this.donorModel.find({bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
 
-     public async getDonorByBloodTypeAddressAndStatus(address:string[],bloodType:string,activeStatus:boolean,pageNumber:number){
+     public async getDonorByBloodTypeAddressAndStatus(address:string[],bloodType:string,activeStatus:boolean,pageNumber:number,ignorePageNumber:boolean = false){
+        if(ignorePageNumber){
+            return await this.donorModel.find({address:{$in:address},bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).populate("userRef")  
+        }
         return await this.donorModel.find({address:{$in:address},bloodType,isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
 
-     public async getDonorsByStatus(activeStatus:boolean,pageNumber:number){
+     public async getDonorsByStatus(activeStatus:boolean,pageNumber:number,ignorePageNumber:boolean = false){
+        if(ignorePageNumber){
+            return await this.donorModel.find({isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).populate("userRef")  
+        }
         return await this.donorModel.find({isActive:activeStatus?activeStatus:{$in:[true,false]},isElligibleToDonate:activeStatus?activeStatus:{$in:[true,false]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate("userRef")
      }
 
@@ -76,6 +88,7 @@ export class DonorService {
         let result = []
         let activeStatus = false
         let pageNumber = 1
+        let ignorePageNumber = false
 
         // handling status of donor
         if(parameters.status){
@@ -93,26 +106,31 @@ export class DonorService {
                 pageNumber=temp
             }
         }
-       
+       // handle ignore page number
+       if(parameters.ignorePageNumber){
+        if(parameters.ignorePageNumber==='true'){
+            ignorePageNumber=true
+        }
+       }
         // handling address and blood type of donor
         if(parameters.bloodType && parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getDonorByBloodTypeAddressAndStatus(parameters.address,parameters.bloodType,activeStatus,pageNumber)
+                result = await this.getDonorByBloodTypeAddressAndStatus(parameters.address,parameters.bloodType,activeStatus,pageNumber,ignorePageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getDonorByBloodTypeAddressAndStatus([parameters.address],parameters.bloodType,activeStatus,pageNumber)
+                result = await this.getDonorByBloodTypeAddressAndStatus([parameters.address],parameters.bloodType,activeStatus,pageNumber,ignorePageNumber)
             }else{
-                result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus,pageNumber)
+                result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus,pageNumber,ignorePageNumber)
             }
         }else if(parameters.bloodType){
-            result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus,pageNumber)
+            result = await this.getDonorByBloodTypeAndStatus(parameters.bloodType,activeStatus,pageNumber,ignorePageNumber)
         }else if(parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getDonorsByAddressAndStatus(parameters.address,activeStatus,pageNumber)
+                result = await this.getDonorsByAddressAndStatus(parameters.address,activeStatus,pageNumber,ignorePageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getDonorsByAddressAndStatus([parameters.address],activeStatus,pageNumber)  
+                result = await this.getDonorsByAddressAndStatus([parameters.address],activeStatus,pageNumber,ignorePageNumber)  
         }
         }else{
-            result = await this.getDonorsByStatus(activeStatus,pageNumber)
+            result = await this.getDonorsByStatus(activeStatus,pageNumber,ignorePageNumber)
         }
         return result
      }

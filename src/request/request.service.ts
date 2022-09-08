@@ -27,7 +27,7 @@ export class RequestService{
             foundDonors:[]
         })
         let result =  await (await newRequest.save()).populate('userRef')
-        let matchingDonors = await this.donorService.getDonorByQueryParametrs({status:'active',bloodType:request.bloodType,address:request.address})
+        let matchingDonors = await this.donorService.getDonorByQueryParametrs({status:'active',bloodType:request.bloodType,address:request.address,ignorepageNumber:true})
         if(matchingDonors.length>0){
             let recipientEmails = []
             for(let donor of matchingDonors){
@@ -35,7 +35,7 @@ export class RequestService{
                     recipientEmails.push(donor.userRef.email)
                 }
             }
-            // console.log(recipientEmails)
+         
             if(recipientEmails.length>0){
                 this.emailService.sendEmail(`${result.userRef.userName} needs your help, check the donation portal at https://www.google.com to donate your blood and save life `,"Some one you can save is on the way",
                 // `<div style = 'font-family:sans-serif;padding:5em 1em;border-radius:1em;box-shadow: 2px 2px 10px black'> <h4 style='text-transform:capitalize;display:inline'>${result.userRef.userName}</h4> needs your help, check the donation portal <a href = 'https://www.google.com' style='text-decoration:none;background:blue;color:white;border-radius:1em;padding:0.2em 1em;margin:0.1em 0.2em' >here </a> to donate your blood and save life </div>`,
@@ -43,7 +43,7 @@ export class RequestService{
                 recipientEmails)
             }
         }
-        // console.log(matchingDonors)
+    
         return result
     }
 
@@ -61,23 +61,36 @@ export class RequestService{
         return results
     }
 
-    public async getRequestByAddressBloodTypeAndStatus(addresses:string[],bloodType:string,status:string[],pageNumber:number){
+    public async getRequestByAddressBloodTypeAndStatus(addresses:string[],bloodType:string,status:string[],pageNumber:number,ignorePageNumber:boolean=false){
+        if(ignorePageNumber){
+            return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}})     
+        }
         return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
-    public async getRequestByBloodTypeAndStatus(bloodType:string,status:string[],pageNumber:number){
-       return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+    public async getRequestByBloodTypeAndStatus(bloodType:string,status:string[],pageNumber:number,ignorePageNumber:boolean=false){
+        if(ignorePageNumber){
+            return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}})   
+        }
+        return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
-    public async getRequestByAddressAndStatus(address:string[],status:string[],pageNumber:number){
+    public async getRequestByAddressAndStatus(address:string[],status:string[],pageNumber:number,ignorePageNumber:boolean=false){
+        if(ignorePageNumber){
+            return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}})
+        }
         return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
-    public async getRequestByStatus(status:string[],pageNumber:number){
+    public async getRequestByStatus(status:string[],pageNumber:number,ignorePageNumber:boolean=false){
+        if(ignorePageNumber){
+            return await this.requestModel.find({status:{$in:status}})
+        }
         return await this.requestModel.find({status:{$in:status}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
     }
     async getRequestByQueryParametrs(parameters:any){
         let result = []
         let pageNumber = 1
         let status = [...REQUESTSTATUS]
-        // this.emailService.sendEmail('this is the text fild on the message','to kill you','<h2>hey due</h2><p>paragraph dude!!</p>',['abe@gmail.com','tewo@gmail.com'])
+        let ignorepageNumber=false
+      
         if(parameters.status){
             if(typeof parameters.status === 'string'){
                 if(parameters.status !=='all'){
@@ -96,25 +109,32 @@ export class RequestService{
             }
         }
        
+        // handing ignore page number
+        if(parameters.ignorePageNumber){
+            if(parameters.ignorePageNumber==='true'){
+                ignorepageNumber=true
+            }
+        } 
+
         // handling address and blood type of request
         if(parameters.bloodType && parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getRequestByAddressBloodTypeAndStatus(parameters.address,parameters.bloodType,status,pageNumber)
+                result = await this.getRequestByAddressBloodTypeAndStatus(parameters.address,parameters.bloodType,status,pageNumber,ignorepageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getRequestByAddressBloodTypeAndStatus([parameters.address],parameters.bloodType,status,pageNumber)
+                result = await this.getRequestByAddressBloodTypeAndStatus([parameters.address],parameters.bloodType,status,pageNumber,ignorepageNumber)
             }else{
-                result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status,pageNumber)
+                result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status,pageNumber,ignorepageNumber)
             }
         }else if(parameters.bloodType){
-            result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status,pageNumber)
+            result = await this.getRequestByBloodTypeAndStatus(parameters.bloodType,status,pageNumber,ignorepageNumber)
         }else if(parameters.address){
             if( typeof parameters.address == 'object'){
-                result = await this.getRequestByAddressAndStatus(parameters.address,status,pageNumber)
+                result = await this.getRequestByAddressAndStatus(parameters.address,status,pageNumber,ignorepageNumber)
             }else if(typeof parameters.address == 'string'){
-                result = await this.getRequestByAddressAndStatus([parameters.address],status,pageNumber)  
+                result = await this.getRequestByAddressAndStatus([parameters.address],status,pageNumber,ignorepageNumber)  
         }
         }else{
-            result = await this.getRequestByStatus(status,pageNumber)
+            result = await this.getRequestByStatus(status,pageNumber,ignorepageNumber)
         }
 
         return result
@@ -135,7 +155,7 @@ export class RequestService{
                 } 
                 let notificationRecipientEmail= [updated.userRef.email]
                 await this.donorService.addRequestRef(donorId,requestId)
-                // console.log(notificationRecipientEmail)
+           
                 if(notificationRecipientEmail.length>0){
                     this.emailService.sendEmail(`Hellow dear ${updated.userRef.userName}, we hope you are doing well. A new donor has been found for your request. Check the details on the portal `
                     ,'Donor Found',

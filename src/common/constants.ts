@@ -27,4 +27,4 @@ export const CITYNAMES = CITIESGEOLOCATION.map(cityDetail=>{
     return cityDetail.name.toLowerCase()
 })
 
-export const PAGESIZE = 20
+export const PAGESIZE = 10
