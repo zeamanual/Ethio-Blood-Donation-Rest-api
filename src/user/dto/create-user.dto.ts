@@ -1,5 +1,6 @@
 import { Type } from "class-transformer"
 import { IsEmail, IsEnum, IsNotEmpty, IsNumber, IsObject, IsPhoneNumber, IsString, MinLength, ValidateNested } from "class-validator"
+import { CITYNAMES } from "../../common/constants"
 import { BLOODTYPES, GENDER } from "../user.constants"
 import { Address } from "./address"
 
@@ -22,9 +23,12 @@ export class CreateUserDTO{
     @IsEnum(GENDER)
     gender:string
 
-    @ValidateNested()
-    @Type(()=>Address)
-    address:Address
+    // @ValidateNested()
+    // @Type(()=>Address)
+    // address:Address
+    @IsString()
+    @IsEnum(CITYNAMES)
+    address:string
 
     @MinLength(8)
     @IsString()

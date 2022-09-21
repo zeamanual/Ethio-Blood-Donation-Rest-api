@@ -21,8 +21,11 @@ export class User {
     @Prop()
     age:number
 
-    @Prop(raw({cityName:String,longtitude:Number,latitude:Number}))
-    address:Address
+    // @Prop(raw({cityName:String,longtitude:Number,latitude:Number}))
+    // address:Address
+
+    @Prop()
+    address:string
 
     @Prop()
     password:string
