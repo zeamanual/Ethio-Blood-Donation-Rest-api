@@ -35,10 +35,32 @@ export class RequestController{
             throw new HttpException("No request with specified filter found",404)
         }
     }
+
+    @Get('byDonorId/')
+    public async getRequestByDonorId(@Req() req:Request){
+        let donor = await this.donorService.getDonorByUserId(req.user['_id'])
+        if(donor){
+            let requests = await this.requestService.getRequestsByDonorId(donor['_id'])
+            if(requests.length<1){
+                throw new HttpException("You Havn't Donated Before",404)
+            }
+            return requests
+        }else{
+            throw new HttpException('User Not A Donor',400)
+        }
+    }
+
     @Get('match/:pageNumber')
-    public async getDonorMatchingRequests(@Param('pageNumber',ParseIntPipe) pageNumber:number,@Req() request:Request){
-        let matchingRequests = await this.requestService.getDonorMatchingRequests(request.user['_id'],pageNumber)
+    public async getDonorMatchingRequests(@Param('pageNumber',ParseIntPipe) pageNumber:number,@Req() request:Request,@Query() queryParams){
+        let ignorePageNumber=false
+        if(queryParams.ignorePageNumber=='true'){
+            ignorePageNumber=true
+        }
+        let matchingRequests = await this.requestService.getDonorMatchingRequests(request.user['_id'],pageNumber,ignorePageNumber)
         if(matchingRequests.length>0){
+            if(ignorePageNumber){
+                return matchingRequests.length
+            }
             return matchingRequests
         }
         throw new HttpException("No matching requests found",404)

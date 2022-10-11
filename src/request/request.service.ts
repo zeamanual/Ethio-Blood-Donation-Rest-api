@@ -48,7 +48,7 @@ export class RequestService{
     }
 
     public async getRequestById (requestId:string){
-        let foundRequest = await this.requestModel.findOne({_id:requestId})
+        let foundRequest = await this.requestModel.findOne({_id:requestId}).populate("userRef")
         if(foundRequest){
             return foundRequest
         }else{
@@ -56,42 +56,50 @@ export class RequestService{
         }
     }
 
+    public async getRequestsByDonorId(donorId:string){
+        let foundRequests = await this.requestModel.find({foundDonors:{$in:[donorId]}})
+        return foundRequests
+    }
+
     public async getRequestsByUserId (userId:string){
-        let results = await this.requestModel.find({userRef:userId})
+        let results = await this.requestModel.find({userRef:userId}).populate('userRef')   
         return results
     }
 
     public async getRequestByAddressBloodTypeAndStatus(addresses:string[],bloodType:string,status:string[],pageNumber:number,ignorePageNumber:boolean=false){
         if(ignorePageNumber){
-            return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}})     
+            return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}}).populate('userRef')     
         }
-        return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.requestModel.find({address:{$in:[...addresses]},bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate('userRef')   
     }
     public async getRequestByBloodTypeAndStatus(bloodType:string,status:string[],pageNumber:number,ignorePageNumber:boolean=false){
         if(ignorePageNumber){
-            return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}})   
+            return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}}).populate('userRef')      
         }
-        return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.requestModel.find({bloodType:bloodType,status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate('userRef')   
     }
     public async getRequestByAddressAndStatus(address:string[],status:string[],pageNumber:number,ignorePageNumber:boolean=false){
         if(ignorePageNumber){
-            return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}})
+            return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}}).populate('userRef')   
         }
-        return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.requestModel.find({address:{$in:[...address]},status:{$in:[...status]}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate('userRef')   
     }
     public async getRequestByStatus(status:string[],pageNumber:number,ignorePageNumber:boolean=false){
         if(ignorePageNumber){
-            return await this.requestModel.find({status:{$in:status}})
+            return await this.requestModel.find({status:{$in:status}}).populate('userRef')   
         }
-        return await this.requestModel.find({status:{$in:status}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE)
+        return await this.requestModel.find({status:{$in:status}}).skip((pageNumber*PAGESIZE)-PAGESIZE).limit(PAGESIZE).populate('userRef')   
     }
 
-    public async getDonorMatchingRequests(userId: string,pageNumber:number) {
+    public async getDonorMatchingRequests(userId: string,pageNumber:number,ignorePage=false) {
         let donor = await this.donorService.getDonorByUserId(userId)
         let matchingRequests= []
-        // console.log(donor)
+        let ignorePageNumber='true'
+        if(!ignorePage){
+            ignorePageNumber='false'
+        }
         if(donor){
-            matchingRequests = await this.getRequestByQueryParametrs({bloodType:donor.bloodType,address:donor.address,status:[REQUESTSTATUS[0],REQUESTSTATUS[1]],pageNumber})
+            matchingRequests = await this.getRequestByQueryParametrs({bloodType:donor.bloodType,address:donor.address,status:[REQUESTSTATUS[0],REQUESTSTATUS[1]],pageNumber,ignorePageNumber})
             return matchingRequests
         }
         throw new HttpException("Donor not found.",404)

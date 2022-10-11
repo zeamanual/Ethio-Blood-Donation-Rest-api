@@ -12,6 +12,6 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Post('/user/login')
     public login( @Req() req:Request, @Body("username")userName:string, @Body("password") password:string){
-        return {token: this.authService.generateToken({userName: req.user['userName'],_id:req.user['_id'],role:req.user['role']})}
+        return {userId:req.user['_id'],address:req.user['address'],bloodType:req.user['bloodType'],roles:req.user['role'],token: this.authService.generateToken({userName: req.user['userName'],_id:req.user['_id'],role:req.user['role']})}
     }
 }
