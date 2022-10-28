@@ -115,9 +115,9 @@ export class RequestController {
     public async updateRequest(@Param('requestId') requestId: string, @Body() request: UpdateRequestDTO, @Req() req: Request) {
         let existingRequest = await this.requestService.getRequestById(requestId)
         if (existingRequest) {
-            if (existingRequest.userRef == req.user['_id']) {
+            if (existingRequest.userRef['_id'] == req.user['_id']) {
                 return await this.requestService.updateRequest(requestId, request)
-            } else {
+            } else { 
                 throw new HttpException("It is not a request you have created", 403)
             }
         } else {
