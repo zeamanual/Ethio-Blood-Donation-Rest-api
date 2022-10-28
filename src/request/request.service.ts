@@ -48,7 +48,7 @@ export class RequestService{
     }
 
     public async getRequestById (requestId:string){
-        let foundRequest = await this.requestModel.findOne({_id:requestId}).populate("userRef")
+        let foundRequest = await (await this.requestModel.findOne({_id:requestId}).populate("userRef")).populate('foundDonors') 
         if(foundRequest){
             return foundRequest
         }else{
@@ -57,7 +57,7 @@ export class RequestService{
     }
 
     public async getRequestsByDonorId(donorId:string){
-        let foundRequests = await this.requestModel.find({foundDonors:{$in:[donorId]}})
+        let foundRequests = await this.requestModel.find({foundDonors:{$in:[donorId]}}).populate("userRef")
         return foundRequests
     }
 
