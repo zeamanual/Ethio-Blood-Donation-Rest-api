@@ -125,6 +125,17 @@ export class RequestController {
         }
     }
 
+    @Put('/removeDonor/:requestId')
+    @HttpCode(200)
+    public async removeDonorFromRequest(@Param("requestId") requestId:string,@Req() req:Request){
+        let donor = await this.donorService.getDonorByUserId(req.user['_id'])
+        if(donor){
+            await this.requestService.removeDonorFromRequest(donor._id,requestId)
+        }else{
+            throw new HttpException("User not a donor",400)
+        }
+    }
+
     @Delete('/:requestId')
     @HttpCode(200)
     public async deleteRequest(@Req() req: Request, @Param("requestId") requestId: string) {

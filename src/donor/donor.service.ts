@@ -144,6 +144,10 @@ export class DonorService {
         return await this.donorModel.findOneAndUpdate({userRef:userId},{address:donor.address,isActive:donor.active},{runValidators:true,new:true})
     }
 
+    public async cancelDonation(donorId:string,requestId:string){
+        let foundDonor = await this.donorModel.findOne({_id:donorId})
+        await this.donorModel.findOneAndUpdate({_id:donorId},{isElligibleToDonate:true,donatedFor:foundDonor.donatedFor.filter(req=>req['_id'].toString()!==requestId.toString())})
+    }
     
     @Cron("0 0 0 * * *")
     // @Cron("*/4 * * * * *")

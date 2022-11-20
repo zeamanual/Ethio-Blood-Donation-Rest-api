@@ -190,6 +190,22 @@ export class RequestService {
         }
     }
 
+    public async removeDonorFromRequest(donorId:string,requestId:string){
+        let foundRequest = await this.requestModel.findOne({_id:requestId})
+        if(foundRequest.foundDonors.find(donor=>donor['_id'].toString()==donorId.toString())){
+            let newFoundDonorsList = foundRequest.foundDonors.filter(donor=>donor['_id'].toString()!==donorId.toString())
+            let newStatus = REQUESTSTATUS[1]
+            let newFoundBloodUnit = foundRequest.foundBloodUnit-1
+            let newRemainingBloodUnit = foundRequest.remainingBloodUnit+1
+            await this.requestModel.findOneAndUpdate({_id:requestId},
+                {foundDonors:newFoundDonorsList,status:newStatus,foundBloodUnit:newFoundBloodUnit,remainingBloodUnit:newRemainingBloodUnit},
+                {runValidators:true,new:true})
+            await this.donorService.cancelDonation(donorId,requestId)
+        }else{
+            throw new HttpException("User haven't donated for this request",400)
+        }
+    }
+
     public async updateRequest(requestId: string, request: UpdateRequestDTO) {
 
 
