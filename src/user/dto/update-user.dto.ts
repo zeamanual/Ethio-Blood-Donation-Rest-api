@@ -6,6 +6,11 @@ import { Address } from "./address"
 
 export class UpdateUserDTO{
 
+    @IsString()
+    @MinLength(5)
+    @IsOptional() 
+    userName:string
+
     @IsOptional()    
     @IsEmail()
     email:string
@@ -13,6 +18,7 @@ export class UpdateUserDTO{
     @IsString()
     @IsOptional() 
     phoneNumber:string
+
 
     @IsNumber()
     @IsOptional() 

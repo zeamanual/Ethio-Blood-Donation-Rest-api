@@ -15,7 +15,7 @@ export class UserController {
     public async getUser(@Req() req:Request){
         let found = await this.userService.getUser(req.user["userName"])
         if(found){
-            return {userName:found.userName,email:found.email,phoneNumber:found.phoneNumber,bloodType:found.bloodType,age:found.age,address:found.address}
+            return {userName:found.userName,email:found.email,phoneNumber:found.phoneNumber,bloodType:found.bloodType,age:found.age,address:found.address,gender:found.gender}
         }
         else{
             throw new HttpException("User not found",HttpStatus.NOT_FOUND)
@@ -31,6 +31,14 @@ export class UserController {
     @Put()
     @HttpCode(200)
     public async updateProfile(@Body() user:UpdateUserDTO,@Req() req:Request){
-       return await this.userService.updateProfile(req.user['_id'],user)
+
+        let existingUserByUserName = await this.userService.getUser(user.userName)
+        let existingUserById = await this.userService.getById(req.user['_id'])
+
+        if(user.userName===existingUserById.userName || !existingUserByUserName){
+            return await this.userService.updateProfile(req.user['_id'],user)
+        }else{
+            throw new HttpException("User name already taken. Try another one",400)
+        }
     }
 }

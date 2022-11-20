@@ -128,9 +128,10 @@ export class RequestController {
     @Delete('/:requestId')
     @HttpCode(200)
     public async deleteRequest(@Req() req: Request, @Param("requestId") requestId: string) {
+        console.log('hay here')
         let existingRequest = await this.requestService.getRequestById(requestId)
         if (existingRequest) {
-            if (existingRequest.userRef == req.user['_id']) {
+            if (existingRequest.userRef['_id'] == req.user['_id']) {
                 await this.requestService.deleteRequest(requestId)
             } else {
                 throw new HttpException("It is not a request you have created", 403)
