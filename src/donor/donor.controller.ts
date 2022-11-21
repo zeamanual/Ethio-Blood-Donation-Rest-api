@@ -54,7 +54,7 @@ export class DonorController{
         if(!created) throw new HttpException("Try again",400)
      }
 
-    @SetMetadata('role','DONOR')
+    // @SetMetadata('role','DONOR')
     @Put()
     public async updateDonor(@Req() req:Request,@Body() donor:UpdateDonorDTO){
         let updated = await this.donorService.updateDonor(req.user['_id'],donor)
