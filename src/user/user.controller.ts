@@ -13,7 +13,7 @@ export class UserController {
     @UseGuards(JwtAuthGuard)
     @Get()
     public async getUser(@Req() req:Request){
-        let found = await this.userService.getUser(req.user["userName"])
+        let found = await this.userService.getById(req.user["_id"])
         if(found){
             return {userName:found.userName,email:found.email,phoneNumber:found.phoneNumber,bloodType:found.bloodType,age:found.age,address:found.address,gender:found.gender,roles:found.role}
         }
