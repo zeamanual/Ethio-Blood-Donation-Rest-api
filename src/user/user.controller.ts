@@ -15,7 +15,7 @@ export class UserController {
     public async getUser(@Req() req:Request){
         let found = await this.userService.getUser(req.user["userName"])
         if(found){
-            return {userName:found.userName,email:found.email,phoneNumber:found.phoneNumber,bloodType:found.bloodType,age:found.age,address:found.address,gender:found.gender}
+            return {userName:found.userName,email:found.email,phoneNumber:found.phoneNumber,bloodType:found.bloodType,age:found.age,address:found.address,gender:found.gender,roles:found.role}
         }
         else{
             throw new HttpException("User not found",HttpStatus.NOT_FOUND)

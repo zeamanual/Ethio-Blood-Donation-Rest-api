@@ -160,7 +160,7 @@ export class DonorService {
         while(index<donorsCount){
             let currentDonor = allDonors[index]
             if(currentDonor.lastDonationDate){
-                if(this.givenDaysPassedAfterGivenDate(currentDonor.lastDonationDate,1)){
+                if(this.givenDaysPassedAfterGivenDate(currentDonor.lastDonationDate,75)){
                    let updated =  await this.donorModel.findOneAndUpdate({_id:currentDonor._id},{isElligibleToDonate:true},{runValidators:true,new:true}).populate('userRef')
                    if(updated.userRef.email){
                     notificationRecipientEmails.push(updated.userRef.email)
