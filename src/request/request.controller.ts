@@ -18,7 +18,6 @@ export class RequestController {
     public async getRequestByUserId(@Req() req: Request) {
         let result = await this.requestService.getRequestsByUserId(req.user['_id'])
         if (result.length > 0) {
-            console.log(result)
             return result.map(req => {
                 let temporaryUserNameHolder = req.userRef.userName
                 let temporaryUserIdHolder = req.userRef['_id']
@@ -155,7 +154,6 @@ export class RequestController {
     @Delete('/:requestId')
     @HttpCode(200)
     public async deleteRequest(@Req() req: Request, @Param("requestId") requestId: string) {
-        console.log('hay here')
         let existingRequest = await this.requestService.getRequestById(requestId)
         if (existingRequest) {
             if (existingRequest.userRef['_id'] == req.user['_id']) {
