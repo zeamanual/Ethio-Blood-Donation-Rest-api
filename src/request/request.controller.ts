@@ -18,7 +18,13 @@ export class RequestController {
     public async getRequestByUserId(@Req() req: Request) {
         let result = await this.requestService.getRequestsByUserId(req.user['_id'])
         if (result.length > 0) {
-            return result
+            console.log(result)
+            return result.map(req => {
+                let temporaryUserNameHolder = req.userRef.userName
+                let temporaryUserIdHolder = req.userRef['_id']
+                delete req.userRef
+                return { ...req['_doc'], userRef: { _id: temporaryUserIdHolder, userName: temporaryUserNameHolder } }
+            })
         } else {
             throw new HttpException("No request owned by user", 404)
         }
@@ -63,6 +69,12 @@ export class RequestController {
             if (ignorePageNumber) {
                 return matchingRequests.length
             }
+
+            matchingRequests = matchingRequests.map(req => {
+                let tempUserNameHolder = req.userRef.userName
+                delete req.userRef
+                return { ...req._doc, userRef: { userName: tempUserNameHolder } }
+            })
             return matchingRequests
         }
         throw new HttpException("No matching requests found", 404)
@@ -70,16 +82,20 @@ export class RequestController {
     @Get('/:requestId')
     public async getRequestById(@Req() req: Request, @Param("requestId") requestId: string) {
         let result = await this.requestService.getRequestById(requestId)
+        let temporaryUserNameHolder = result.userRef.userName
+        delete result.userRef
         if (result) {
             if (result.userRef['_id'] == req.user['_id']) {
                 let donorsList = result.foundDonors
-                let donorsDetail:any = await Promise.all(donorsList.map(async (donor) => {
+                let donorsDetail: any = await Promise.all(donorsList.map(async (donor) => {
                     let userDetail = await this.userService.getById(donor.userRef['_id'])
-                    return { userName:userDetail.userName,email:userDetail.email,phoneNumber:userDetail.phoneNumber }
+                    return { userName: userDetail.userName, email: userDetail.email, phoneNumber: userDetail.phoneNumber }
                 }))
-                return {...result['_doc'],donorsDetail}
+                return { ...result['_doc'], userRef: { userName: temporaryUserNameHolder }, donorsDetail }
+            } else {
+                result.foundDonors = result.foundDonors.map(donor => donor['_id'])
+                return { ...result['_doc'], userRef: { userName: temporaryUserNameHolder } }
             }
-            return result
         } else {
             throw new HttpException("Request can not be found", 404)
         }
@@ -117,7 +133,7 @@ export class RequestController {
         if (existingRequest) {
             if (existingRequest.userRef['_id'] == req.user['_id']) {
                 return await this.requestService.updateRequest(requestId, request)
-            } else { 
+            } else {
                 throw new HttpException("It is not a request you have created", 403)
             }
         } else {
@@ -127,12 +143,12 @@ export class RequestController {
 
     @Put('/removeDonor/:requestId')
     @HttpCode(200)
-    public async removeDonorFromRequest(@Param("requestId") requestId:string,@Req() req:Request){
+    public async removeDonorFromRequest(@Param("requestId") requestId: string, @Req() req: Request) {
         let donor = await this.donorService.getDonorByUserId(req.user['_id'])
-        if(donor){
-            await this.requestService.removeDonorFromRequest(donor._id,requestId)
-        }else{
-            throw new HttpException("User not a donor",400)
+        if (donor) {
+            await this.requestService.removeDonorFromRequest(donor._id, requestId)
+        } else {
+            throw new HttpException("User not a donor", 400)
         }
     }
 
