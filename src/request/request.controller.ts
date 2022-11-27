@@ -71,8 +71,9 @@ export class RequestController {
 
             matchingRequests = matchingRequests.map(req => {
                 let tempUserNameHolder = req.userRef.userName
+                let tempUserIdHolder = req.userRef['_id']
                 delete req.userRef
-                return { ...req._doc, userRef: { userName: tempUserNameHolder } }
+                return { ...req._doc, userRef: {_id:tempUserIdHolder, userName: tempUserNameHolder } }
             })
             return matchingRequests
         }
